@@ -14,8 +14,16 @@ Public NotInheritable Class Utils
     Public Shared DecimalSeparator As String = String.Format(CType(1.1, String)).Substring(1, 1)
     Public Shared OS As String = My.Computer.Info.OSFullName & " " & My.Computer.Info.OSVersion
     Public Shared Exepath As String = AppDomain.CurrentDomain.BaseDirectory
-
-    Public Shared Log_Filepath As String = Exepath & "Log.psv"
+    Public Shared Current_Log_Filepath As String = Exepath & "Log.psv"
+    Public Shared Property Log_Filepath As String
+        Set(value As String)
+            Current_Log_Filepath = value
+            EventLogger.LogPath = value
+        End Set
+        Get
+            Return Current_Log_Filepath
+        End Get
+    End Property
     Public Shared ConfigFilePath As String = Exepath & "Config.cfg"
     Public Shared User_Filepath As String = Exepath & "Users.psv"
     Public Shared SettingsPath As String = Exepath & "Settings.psv"
