@@ -2,7 +2,6 @@
 Option Explicit On
 Imports System.Text.RegularExpressions
 Imports System.Net
-Imports LogEngine
 
 Public NotInheritable Class Utils
 #Region "Properties"
@@ -14,21 +13,6 @@ Public NotInheritable Class Utils
     Public Shared DecimalSeparator As String = String.Format(CType(1.1, String)).Substring(1, 1)
     Public Shared OS As String = My.Computer.Info.OSFullName & " " & My.Computer.Info.OSVersion
     Public Shared Exepath As String = AppDomain.CurrentDomain.BaseDirectory
-    Public Shared Current_Log_Filepath As String = Exepath & "Log.psv"
-    Public Shared Property Log_Filepath As String
-        Set(value As String)
-            Current_Log_Filepath = value
-            EventLogger.LogPath = value
-        End Set
-        Get
-            Return Current_Log_Filepath
-        End Get
-    End Property
-    Public Shared ConfigFilePath As String = Exepath & "Config.cfg"
-    Public Shared User_Filepath As String = Exepath & "Users.psv"
-    Public Shared SettingsPath As String = Exepath & "Settings.psv"
-    Public Shared EventLogger As New LogEngine.LogEngine(Log_Filepath, User_Filepath, Codename)
-    Public Shared Property SettingsProvider As New Settings(SettingsPath)
 
 #End Region
 
@@ -663,7 +647,6 @@ Public NotInheritable Class Utils
     ''' Finaliza el programa correctamente.
     ''' </summary>
     Public Shared Sub ExitProgram()
-        EventLogger.EndLog = True
         Environment.Exit(0)
     End Sub
 
@@ -737,9 +720,7 @@ Public NotInheritable Class Utils
 
             Dim total As Integer = (Days + Hours + Minutes)
             Return total
-
         Catch ex As IndexOutOfRangeException
-            EventLogger.EX_Log("EX: " & ex.Message, Reflection.MethodBase.GetCurrentMethod().Name)
             Return 0
         End Try
     End Function
@@ -801,7 +782,6 @@ Public NotInheritable Class Utils
         For Each m As Match In Regex.Matches(text, signpattern)
             Dim TheDate As DateTime = ESWikiDatetime(m.Value)
             Datelist.Add(TheDate)
-            EventLogger.Debug_Log("Adding " & TheDate.ToString, Reflection.MethodBase.GetCurrentMethod().Name)
         Next
         Return Datelist.ToArray
     End Function
@@ -1001,11 +981,9 @@ Public NotInheritable Class Utils
                     End If
                 End If
             Next
-
         End If
 
         Dim TheDate As DateTime = ESWikiDatetime(lastparagraph)
-        EventLogger.Debug_Log("Returning " & TheDate.ToString, Reflection.MethodBase.GetCurrentMethod().Name)
         Return TheDate
     End Function
 
@@ -1019,7 +997,6 @@ Public NotInheritable Class Utils
         Dim matchc As MatchCollection = Regex.Matches(text, signpattern)
 
         If matchc.Count = 0 Then
-            EventLogger.Debug_Log(Messages.NoDateMatch, Reflection.MethodBase.GetCurrentMethod().Name)
             Return New Date(9999, 12, 31, 23, 59, 59)
         End If
 
@@ -1044,7 +1021,7 @@ Public NotInheritable Class Utils
                 Dim dat As New DateTime(dates(4), dates(3), dates(2), dates(0), dates(1), 0)
                 TheDate = dat
             Catch ex As System.FormatException
-                EventLogger.Debug_Log("EX: " & ex.Message, Reflection.MethodBase.GetCurrentMethod().Name)
+                Return New Date(9999, 12, 31, 23, 59, 59)
             End Try
         Next
         Return TheDate
@@ -1061,7 +1038,6 @@ Public NotInheritable Class Utils
         Dim matchc As MatchCollection = Regex.Matches(text, signpattern)
 
         If matchc.Count = 0 Then
-            EventLogger.Debug_Log(Messages.NoDateMatch, Reflection.MethodBase.GetCurrentMethod().Name)
             Return New DateTime(9999, 12, 31, 23, 59, 59)
         End If
 
@@ -1085,9 +1061,7 @@ Public NotInheritable Class Utils
                 Dim dat As New DateTime(datesInt(4), datesInt(3), datesInt(2), datesInt(0), datesInt(1), 0)
                 dates.Add(dat)
             Catch ex As System.FormatException
-                EventLogger.Debug_Log("EX: " & ex.Message, Reflection.MethodBase.GetCurrentMethod().Name)
             Catch ex2 As System.ArgumentOutOfRangeException
-                EventLogger.Debug_Log("EX: " & ex2.Message, Reflection.MethodBase.GetCurrentMethod().Name)
             End Try
         Next
         dates.Sort()
@@ -1103,7 +1077,6 @@ Public NotInheritable Class Utils
         Dim matchc As MatchCollection = Regex.Matches(text, signpattern)
         Dim tdat As New DateTime(9999, 12, 31, 23, 59, 59)
         If matchc.Count = 0 Then
-            EventLogger.Debug_Log(Messages.NoDateMatch, Reflection.MethodBase.GetCurrentMethod().Name)
             Return tdat
         End If
 
@@ -1126,9 +1099,7 @@ Public NotInheritable Class Utils
                 Next
                 tdat = New DateTime(datesInt(4), datesInt(3), datesInt(2), datesInt(0), datesInt(1), 0)
             Catch ex As System.FormatException
-                EventLogger.Debug_Log("EX: " & ex.Message, Reflection.MethodBase.GetCurrentMethod().Name)
             Catch ex2 As System.ArgumentOutOfRangeException
-                EventLogger.Debug_Log("EX: " & ex2.Message, Reflection.MethodBase.GetCurrentMethod().Name)
             End Try
             Return tdat
         Next
