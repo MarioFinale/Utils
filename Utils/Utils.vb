@@ -954,7 +954,7 @@ Public NotInheritable Class Utils
             Throw New ArgumentException("Empty parameter", "text")
         End If
         text = text.Trim(CType(vbCrLf, Char())) & " "
-        Dim lastparagraph As String = Regex.Match(text, ".+[\s\s]+(?===.+==|$)").Value
+        Dim lastparagraph As String = Regex.Match(text, ".+(?=(([\n\r])==.+==)|$)").Value
         Dim matchc As MatchCollection = Regex.Matches(lastparagraph, signpattern)
 
         If matchc.Count = 0 And Not (((lastparagraph(0) = ";"c) Or (lastparagraph(0) = ":"c) Or (lastparagraph(0) = "*"c) Or (lastparagraph(0) = "#"c))) Then
@@ -982,15 +982,14 @@ Public NotInheritable Class Utils
                 End If
             Next
         End If
-
         Dim TheDate As DateTime = ESWikiDatetime(lastparagraph)
         Return TheDate
     End Function
 
     ''' <summary>
-    ''' Entrega 
+    ''' Entrega la ultima fecha, que aparezca en un texto dado (si la fecha tiene formato de firma wikipedia).
     ''' </summary>
-    ''' <param name="text">Entrega la ultima fecha, que aparezca en un texto dado (si la fecha tiene formato de firma wikipedia).</param>
+    ''' <param name="text"></param>
     ''' <returns></returns>
     Public Shared Function ESWikiDatetime(ByVal text As String) As DateTime
         Dim TheDate As DateTime = Nothing
