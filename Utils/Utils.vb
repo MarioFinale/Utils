@@ -318,6 +318,37 @@ Public NotInheritable Class Utils
     End Function
 
     ''' <summary>
+    ''' Reeplaza la todas las ocurrencia de una cadena dada en la cadena de entrada menos la primera.
+    ''' </summary>
+    ''' <param name="text">Cadena de texto a modificar.</param>
+    ''' <param name="search">Cadena texto a buscar.</param>
+    ''' <param name="replace">Cadena texto de reemplazo.</param>
+    ''' <returns></returns>
+    Public Shared Function ReplaceEveryOneButFirst(ByVal text As String, ByVal search As String, ByVal replace As String) As String
+        Dim placeholder As String = ColoredText("#$^&&*!?.::++!+_@(!@PLACEHOLDER:::PLACEHOLDER:$^&&*!?.::++!+:PLACEHOLDER::PLACEHOLDER:$^&&*!?.::++!+:PLACEHOLDER::PLACEHOLDER$^&&*!?.::++!+", 1, 1)
+        text = ReplaceFirst(text, search, placeholder)
+        text = text.Replace(search, replace)
+        text = text.Replace(placeholder, search)
+        Return text
+    End Function
+
+    ''' <summary>
+    ''' Reeplaza la todas las ocurrencia de una cadena dada en la cadena de entrada menos la última.
+    ''' </summary>
+    ''' <param name="text">Cadena de texto a modificar.</param>
+    ''' <param name="search">Cadena texto a buscar.</param>
+    ''' <param name="replace">Cadena texto de reemplazo.</param>
+    ''' <returns></returns>
+    Public Shared Function ReplaceEveryOneButLast(ByVal text As String, ByVal search As String, ByVal replace As String) As String
+        Dim placeholder As String = ColoredText("#$^&&*!?.::++!+_@(!@PLACEHOLDER:::PLACEHOLDER:$^&&*!?.::++!+:PLACEHOLDER::PLACEHOLDER:$^&&*!?.::++!+:PLACEHOLDER::PLACEHOLDER$^&&*!?.::++!+", 1, 1)
+        text = ReplaceLast(text, search, placeholder)
+        text = text.Replace(search, replace)
+        text = text.Replace(placeholder, search)
+        Return text
+    End Function
+
+
+    ''' <summary>
     ''' Reeplaza la última ocurrencia de una cadena dada en la cadena de entrada.
     ''' </summary>
     ''' <param name="text">Cadena de texto a modificar.</param>
