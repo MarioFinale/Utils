@@ -2,6 +2,8 @@
 Option Explicit On
 Imports System.Text.RegularExpressions
 Imports System.Net
+Imports Utils.My.Resources
+Imports System.Runtime.InteropServices
 
 Public NotInheritable Class Utils
 #Region "Properties"
@@ -11,7 +13,7 @@ Public NotInheritable Class Utils
     ''' El separador de decimales varia segun SO y configuracion regional, eso puede afectar los calculos.
     ''' </summary>
     Public Shared DecimalSeparator As String = String.Format(CType(1.1, String)).Substring(1, 1)
-    Public Shared OS As String = My.Computer.Info.OSFullName & " " & My.Computer.Info.OSVersion
+    Public Shared OS As String = GetPlatform()
     Public Shared Exepath As String = AppDomain.CurrentDomain.BaseDirectory
 
 #End Region
@@ -684,6 +686,18 @@ Public NotInheritable Class Utils
 #End Region
 
 #Region "Program Functions"
+
+    ''' <summary>
+    ''' Entrega la plataforma de ejecución.
+    ''' </summary>
+    ''' <returns></returns>
+    Public Shared Function GetPlatform() As String
+        Dim isFreebsd As Boolean = RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD)
+        Dim isLinux As Boolean = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+        Dim isWindows As Boolean = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+        Dim isOSx As Boolean = RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+        Return If(isFreebsd, "FreeBDS", "") & If(isLinux, "Linux", "") & If(isWindows, "Windows", "") & If(isOSx, "OSX", "")
+    End Function
 
     ''' <summary>
     ''' Intercambia dos objetos del mismo tipo
