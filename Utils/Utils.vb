@@ -4,6 +4,7 @@ Imports System.Text.RegularExpressions
 Imports System.Net
 Imports Utils.My.Resources
 Imports System.Runtime.InteropServices
+Imports System.Text.Json
 
 Public NotInheritable Class Utils
 #Region "Properties"
@@ -25,6 +26,61 @@ Public NotInheritable Class Utils
 
 #Region "Text Functions"
     Public Shared signpattern As String = "([0-9]{2}):([0-9]{2}) ([0-9]{2}|[0-9]) ([A-z]{3})([\.,])* [0-9]{4}( \([A-z]{3,4}\))*"
+
+
+    Public Shared Function GetJsonDocument(ByVal jsonString As String) As JsonDocument
+        Return JsonDocument.Parse(jsonString)
+    End Function
+
+    Public Shared Function GetJsonElement(ByVal jsonDocument As JsonDocument, ByVal propertyName As String) As JsonElement
+        Dim element As JsonElement
+        Dim text As String = jsonDocument.RootElement.ToString
+        element = jsonDocument.RootElement.GetProperty(propertyName)
+        Return element
+    End Function
+
+
+    Public Shared Function GetJsonElement(ByVal jsonElement As JsonElement, ByVal propertyName As String) As JsonElement
+        Dim text As String = jsonElement.ToString
+        jsonElement = jsonElement.GetProperty(propertyName)
+        Return jsonElement
+    End Function
+
+    Public Shared Function IsJsonPropertyPresent(ByVal jsonElement As JsonElement, ByVal properyName As String) As Boolean
+        For Each elementProperty As JsonProperty In jsonElement.EnumerateObject
+            If elementProperty.Name = properyName Then Return True
+        Next
+        Return False
+    End Function
+    ''' <summary>
+    ''' Crea una cadena de texto concatenado según los parámetros entregados
+    ''' </summary>
+    ''' <param name="array">Array de origen</param>
+    ''' <param name="separator">Separador</param>
+    ''' <returns></returns>
+    Public Shared Function ConcatenateTextArrayWithChar(ByVal array As String(), ByVal separator As Char) As String
+        Dim result As String = ""
+        For Each s As String In array
+            result &= s & separator
+        Next
+        Return result.Trim(separator)
+    End Function
+
+    ''' <summary>
+    ''' Crea una cadena de texto concatenado según los parámetros entregados y la codifica según urlencode
+    ''' </summary>
+    ''' <param name="array">Array de origen</param>
+    ''' <param name="separator">Separador</param>
+    ''' <param name="urlEncode">Codificar el texto en urlencode, se codificará aunque se establesca en 'false'</param>
+    ''' <returns></returns>
+    <CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification:="Overload")>
+    Public Shared Function ConcatenateTextArrayWithChar(ByVal array As String(), ByVal separator As Char, ByVal urlEncode As Boolean) As String
+        Dim result As String = ""
+        For Each s As String In array
+            result &= s & separator
+        Next
+        Return UrlWebEncode(ReplaceLast(result, separator, ""))
+    End Function
 
     ''' <summary>
     ''' Elimina los tags html de una cadena de texto dada.
@@ -299,9 +355,7 @@ Public NotInheritable Class Utils
     ''' <param name="SourceString">Texto a evaluar.</param>
     ''' <returns></returns>
     Public Shared Function GetTitlesOfTemplate(ByVal SourceString As String) As String()
-        Dim mlist As New List(Of String)
-        mlist = TextInBetween(SourceString, "|" & Environment.NewLine & "|", "=").ToList
-        Return mlist.ToArray
+        Return TextInBetween(SourceString, "|" & Environment.NewLine & "|", "=")
     End Function
 
     ''' <summary>
@@ -586,7 +640,7 @@ Public NotInheritable Class Utils
         For a As Integer = 0 To NOWords - 1
             For Each s As String In words
                 If PhraseString(a).ToLower.Contains(s.ToLower) Then
-                    NOAppeareances = NOAppeareances + 1
+                    NOAppeareances += 1
                 End If
             Next
         Next
@@ -838,7 +892,7 @@ Public NotInheritable Class Utils
     ''' <returns></returns>
     Public Shared Function GetPageMainThreads(ByVal pagetext As String) As String()
         Dim tutil As Utils = New Utils
-        Return tutil.GetXLvlThread(pagetext, "([\n\r]|^)((=(?!=)).+?(=(?!=)))(( +)*)([\n\r]|$)")
+        Return tutil.GetLvlThread(pagetext, 1)
     End Function
 
     ''' <summary>
@@ -848,7 +902,7 @@ Public NotInheritable Class Utils
     ''' <returns></returns>
     Public Shared Function GetPageThreads(ByVal pagetext As String) As String()
         Dim tutil As Utils = New Utils
-        Return tutil.GetXLvlThread(pagetext, "([\n\r]|^)((==(?!=)).+?(==(?!=)))(( +)*)([\n\r]|$)")
+        Return tutil.GetLvlThread(pagetext, 2)
     End Function
 
     ''' <summary>
@@ -858,16 +912,17 @@ Public NotInheritable Class Utils
     ''' <returns></returns>
     Public Shared Function GetPageSubThreads(ByVal pagetext As String) As String()
         Dim tutil As Utils = New Utils
-        Return tutil.GetXLvlThread(pagetext, "([\n\r]|^)((===(?!=)).+?(===(?!=)))(( +)*)([\n\r]|$)")
+        Return tutil.GetLvlThread(pagetext, 3)
     End Function
 
     ''' <summary>
     ''' Función base que obtiene los secciones de una página según la expresión regular que defina las secciones.
     ''' </summary>
-    ''' <param name="pagetext"></param>
-    ''' <param name="Threadregex"></param>
+    ''' <param name="pagetext">Texto</param>
+    ''' <param name="lvl">Nivel (= 1 = | == 2 == | === 3 === | ==== 4 ==== )</param>
     ''' <returns></returns>
-    Private Function GetXLvlThread(ByVal pagetext As String, ByVal Threadregex As String) As String()
+    Private Function GetLvlThread(ByVal pagetext As String, ByVal lvl As Integer) As String()
+        Dim ThreadList As New List(Of String)
         Dim temptext As String = pagetext
         Dim commentMatch As MatchCollection = Regex.Matches(temptext, "(<!--)[\s\S]*?(-->)")
         Dim NowikiMatch As MatchCollection = Regex.Matches(temptext, "(<[nN]owiki>)([\s\S]+?)(<\/[nN]owiki>)")
@@ -920,38 +975,29 @@ Public NotInheritable Class Utils
             temptext = temptext.Replace(SyntaxHlMatch(i).Value, ColoredText("PERIODIBOT::::SYNREPLACE::::" & i, 4))
         Next
 
-        Dim mc As MatchCollection = Regex.Matches(temptext, Threadregex)
+        Dim RegexExpression As String
 
-        Dim threadlist As New List(Of String)
+        Select Case lvl
+            Case 1
+                RegexExpression = "(((\n|\r)(=(?!=))(.+)(=(?!=))[ \t]*(\n|\r))([\s\S]*?))(?=(((\n|\r)(=(?!=))(.+)(=(?!=))[ \t]*(\n|\r))([\s\S]*?))|$)"
+            Case 2
+                RegexExpression = "(((\n|\r)(==(?!=))(.+)(==(?!=))[ \t]*(\n|\r))([\s\S]*?))(?=(((\n|\r)(==(?!=))(.+)(==(?!=))[ \t]*(\n|\r))([\s\S]*?))|$)"
+            Case 3
+                RegexExpression = "(((\n|\r)(===(?!=))(.+)(===(?!=))[ \t]*(\n|\r))[\s\S]*?)(?=(((\n|\r)(=){1,4}(.+)(=){1,4}[ \t]*(\n|\r))[\s\S]*?)|$)"
+            Case 4
+                RegexExpression = "(((\n|\r)(====(?!=))(.+)(====(?!=))[ \t]*(\n|\r))[\s\S]*?)(?=(((\n|\r)(=){1,4}(.+)(=){1,4}[ \t]*(\n|\r))[\s\S]*?)|$)"
+            Case Else
+                RegexExpression = "(((\n|\r)(==(?!=))(.+)(==(?!=))[ \t]*(\n|\r))([\s\S]*?))(?=(((\n|\r)(==(?!=))(.+)(==(?!=))[ \t]*(\n|\r))([\s\S]*?))|$)"
+        End Select
 
-        If mc.Count > 0 Then
-            For i As Integer = 0 To mc.Count - 1
+        Dim threads As MatchCollection = Regex.Matches(temptext, RegexExpression)
 
-                Dim nextmatch As Integer = (i + 1)
+        For Each t As Match In threads
+            ThreadList.Add(t.Groups(1).Value)
+        Next
 
-                If Not nextmatch = mc.Count Then
-
-                    Dim threadtitle As String = mc(i).Value
-                    Dim nextthreadtitle As String = mc(nextmatch).Value
-                    Dim threadtext As String = String.Empty
-                    threadtext = TextInBetweenInclusive(temptext, threadtitle, nextthreadtitle)(0)
-                    Dim Completethread As String = ReplaceLast(threadtext, nextthreadtitle, "")
-                    threadlist.Add(Completethread)
-                    temptext = ReplaceFirst(temptext, Completethread, "")
-                Else
-
-                    Dim threadtitle As String = mc(i).Value
-                    Dim ThreadPos As Integer = temptext.IndexOf(threadtitle)
-                    If ThreadPos = -1 Then Continue For
-                    Dim threadlenght As Integer = temptext.Length - temptext.Substring(0, ThreadPos).Length
-                    Dim threadtext As String = temptext.Substring(ThreadPos, threadlenght)
-                    threadlist.Add(threadtext)
-
-                End If
-            Next
-        End If
         Dim EndThreadList As New List(Of String)
-        For Each t As String In threadlist
+        For Each t As String In ThreadList
             Dim nthreadtext As String = t
             'Comentarios
             For i As Integer = 0 To commentMatch.Count - 1
@@ -1061,7 +1107,7 @@ Public NotInheritable Class Utils
                         dates.Add(Integer.Parse(RemoveAllAlphas(s)))
                     End If
                 Next
-                If Not (dates.Count = 5) Then Throw New Exception(Messages.NoDateMatch)
+                If Not (dates.Count = 5) Then Return New Date(9999, 12, 31, 23, 59, 59)
                 Dim dat As New DateTime(dates(4), dates(3), dates(2), dates(0), dates(1), 0)
                 TheDate = dat
             Catch ex As System.FormatException
@@ -1167,6 +1213,24 @@ Public NotInheritable Class Utils
             l.Add(str(i))
         Next
         Return l.ToArray
+    End Function
+
+    ''' <summary>
+    ''' Convierte una cadena de texto ed fecha con el formato que entrega MediaWiki a un objeto date
+    ''' </summary>
+    ''' <param name="timestamp"></param>
+    ''' <returns></returns>
+    Public Shared Function GetDateFromMWTimestamp(ByVal timestamp As String) As Date
+        timestamp = timestamp.Replace("-"c, " "c).Replace("T"c, " "c).Replace(":"c, " "c).Replace("Z", "")
+        Dim timeArray As String() = timestamp.Split(" "c)
+        Dim year As Integer = Integer.Parse(timeArray(0))
+        Dim month As Integer = Integer.Parse(timeArray(1))
+        Dim day As Integer = Integer.Parse(timeArray(2))
+        Dim hour As Integer = Integer.Parse(timeArray(3))
+        Dim minute As Integer = Integer.Parse(timeArray(4))
+        Dim second As Integer = Integer.Parse(timeArray(5))
+        Dim parsedDate As Date = New Date(year, month, day, hour, minute, second)
+        Return parsedDate
     End Function
 
 #End Region

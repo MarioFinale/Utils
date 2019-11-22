@@ -3,10 +3,17 @@
   <PropertyGroup>
     <RootNamespace>Utils</RootNamespace>
     <TargetFramework>netcoreapp3.0</TargetFramework>
+    <AssemblyVersion>1.0.7264.5847</AssemblyVersion>
+    <FileVersion>1.0.7264.5847</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\..\Comp\</OutputPath>
+    <DocumentationFile>Utils.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>Utils.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
