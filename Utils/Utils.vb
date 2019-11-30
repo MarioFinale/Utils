@@ -14,7 +14,7 @@ Public NotInheritable Class Utils
     ''' El separador de decimales varia segun SO y configuracion regional, eso puede afectar los calculos.
     ''' </summary>
     Public Shared DecimalSeparator As String = String.Format(CType(1.1, String)).Substring(1, 1)
-    Public Shared OS As String = GetPlatform()
+    Public Shared OS As String = GetOsString()
     Public Shared Exepath As String = AppDomain.CurrentDomain.BaseDirectory
 
 #End Region
@@ -753,6 +753,21 @@ Public NotInheritable Class Utils
         Return If(isFreebsd, "FreeBDS", "") & If(isLinux, "Linux", "") & If(isWindows, "Windows", "") & If(isOSx, "OSX", "")
     End Function
 
+    Public Shared Function GetOSDescription() As String
+        Return RuntimeInformation.OSDescription
+    End Function
+
+    Public Shared Function GetExecMode() As String
+        Dim processname As String = Process.GetCurrentProcess().ProcessName
+        Dim dotnet As Boolean = processname.Contains("dotnet")
+        Return If(dotnet, "dotnet (JIT)", "native")
+    End Function
+
+    Public Shared Function GetOsString() As String
+        Return GetOSDescription() & " (" & GetPlatform() & ", " & GetExecMode() & ")"
+
+    End Function
+
     ''' <summary>
     ''' Intercambia dos objetos del mismo tipo
     ''' </summary>
@@ -1042,7 +1057,7 @@ Public NotInheritable Class Utils
     ''' <returns></returns>
     Public Shared Function LastParagraphDateTime(ByVal text As String) As DateTime
         If String.IsNullOrEmpty(text) Then
-            Throw New ArgumentException("Empty parameter", "text")
+            Throw New ArgumentException("Empty parameter", NameOf(text))
         End If
         text = text.Trim(CType(vbCrLf, Char())) & " "
         Dim lastparagraph As String = Regex.Match(text, ".+(?=(([\n\r])==.+==)|$)").Value
