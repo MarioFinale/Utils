@@ -15,7 +15,7 @@ Public NotInheritable Class Utils
     ''' </summary>
     Public Shared DecimalSeparator As String = String.Format(CType(1.1, String)).Substring(1, 1)
     Public Shared OS As String = GetOsString()
-    Public Shared Exepath As String = AppDomain.CurrentDomain.BaseDirectory
+    Public Shared Exepath As String = ReplaceLast(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName, Process.GetCurrentProcess().MainModule.ModuleName, "")
 
 #End Region
 
