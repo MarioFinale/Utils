@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Utils": {
+      "commandName": "Executable",
+      "executablePath": "..\\..\\Comp\\netcoreapp3.1\\PeriodiBOT-IRC.exe",
+      "nativeDebugging": true
+    }
+  }
+}
